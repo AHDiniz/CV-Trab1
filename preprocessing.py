@@ -3,6 +3,7 @@ import cv2 as cv
 import numpy as np
 from glob import glob
 from skimage.feature import local_binary_pattern
+from cv2 import xfeatures2d as xf2d
 
 def import_images(animal_dir_names : dict) -> dict:
     result : dict = dict({})
@@ -41,9 +42,21 @@ def compute_lbp(img : np.ndarray, radius : int = 1, number_points : int = 8, MET
     hist /= hist.sum()
     return hist
 
+def compute_sift(img : np.ndarray, number_features : int = 0, octave_layers : int = 3, contrast_threshold : float = .04, edge_threshold : float = 10, sigma : float = 1.6, descriptor_type : int = cv.CV_32F) -> np.ndarray:
+    sift : xf2d.SIFT = xf2d.SIFT_create(number_features, octave_layers, contrast_threshold, edge_threshold, sigma, descriptor_type)
+
+    keypoints, descriptors = sift.detectAndCompute(img, None, useProvidedDescriptors = True)
+    
+    return descriptors.astype('float')
+
 def feature_extraction(img_dict : dict) -> (np.ndarray, np.ndarray):
+    results : list = list([])
+    labels : list = list([])
+    
     for animal, img_list in img_dict.items():
         for img in img_list:
             hog_vector = compute_hog(img)
             lbp_hist = compute_lbp(img)
-    pass
+            sift_descriptors = compute_sift(img)
+
+    return None, None
