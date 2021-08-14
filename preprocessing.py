@@ -1,9 +1,8 @@
 import os
-import cv2 as cv
+import cv2
 import numpy as np
 from glob import glob
 from skimage.feature import local_binary_pattern
-from cv2 import xfeatures2d as xf2d
 
 def import_images(animal_dir_names : dict) -> dict:
     result : dict = dict({})
@@ -13,17 +12,17 @@ def import_images(animal_dir_names : dict) -> dict:
         result[animal] = list([])
         for filename in file_list:
             f = os.path.join('raw-img/' + dir_name, filename)
-            result[animal].append(cv.imread(f))
+            result[animal].append(cv2.imread(f))
 
     return result
 
 def preprocess_image(img : np.ndarray) -> np.ndarray:
     # Gray scale:
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Resize:
-    img = cv.resize(img, (256, 256))
+    img = cv2.resize(img, (256, 256))
     # Gaussian blur:
-    img = cv.GaussianBlur(img, (5, 5), 0)
+    img = cv2.GaussianBlur(img, (5, 5), 0)
     return img
 
 def compute_hog(img : np.ndarray, number_blocks : int = 4, number_bins : int = 12) -> np.ndarray:
@@ -31,7 +30,7 @@ def compute_hog(img : np.ndarray, number_blocks : int = 4, number_bins : int = 1
     blockSize : tuple = (int(winSize[0] / number_blocks), int(winSize[1] / number_blocks))
     blockStride : tuple = blockSize
     cellSize : tuple = (int(blockSize[0] / 2), int(blockSize[1] / 2))
-    hog : cv.HOGDescriptor = cv.HOGDescriptor(winSize, blockSize, blockStride, cellSize, number_bins)
+    hog : cv2.HOGDescriptor = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, number_bins)
     vector : np.ndarray = hog.compute(img)
     return np.reshape(vector, (vector.shape[0]))
 
@@ -42,21 +41,23 @@ def compute_lbp(img : np.ndarray, radius : int = 1, number_points : int = 8, MET
     hist /= hist.sum()
     return hist
 
-def compute_sift(img : np.ndarray, number_features : int = 0, octave_layers : int = 3, contrast_threshold : float = .04, edge_threshold : float = 10, sigma : float = 1.6, descriptor_type : int = cv.CV_32F) -> np.ndarray:
-    sift : xf2d.SIFT = xf2d.SIFT_create(number_features, octave_layers, contrast_threshold, edge_threshold, sigma, descriptor_type)
+def compute_sift(img : np.ndarray, number_features : int = 0, octave_layers : int = 3, contrast_threshold : float = .04, edge_threshold : float = 10, sigma : float = 1.6, descriptor_type : int = cv2.CV_32F) -> np.ndarray:
+    sift : xf2d.SIFT = cv2.xfeatures2d.SIFT_create(number_features, octave_layers, contrast_threshold, edge_threshold, sigma, descriptor_type)
 
     keypoints, descriptors = sift.detectAndCompute(img, None, useProvidedDescriptors = True)
     
     return descriptors.astype('float')
 
-def feature_extraction(img_dict : dict) -> (np.ndarray, np.ndarray):
+def feature_extraction(img_dict : dict) -> list:
     results : list = list([])
-    labels : list = list([])
     
     for animal, img_list in img_dict.items():
+        result = dict({})
         for img in img_list:
-            hog_vector = compute_hog(img)
-            lbp_hist = compute_lbp(img)
-            sift_descriptors = compute_sift(img)
+            result['hog'] = compute_hog(img)
+            result['lbp'] = compute_lbp(img)
+            result['sift'] = compute_sift(img)
+            result['label'] = animal
+        results.append(result)
 
-    return None, None
+    return results

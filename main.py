@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from preprocessing import import_images, feature_extraction
+
 animal_dir_names = dict({
     'dog': 'cane',
     'horse': 'cavallo',
@@ -17,11 +19,9 @@ animal_dir_names = dict({
     'squirrel': 'scoiattolo'
 })
 
-# Get the images
+# Preprocessing and feature extraction:
+features = feature_extraction(import_images(animal_dir_names))
 
-
-# Apply pre-processing to the images
-# Split the database between training and testing
 # Train the classification model
 # Get training statistical data
 # Test the classification model
