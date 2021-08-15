@@ -54,6 +54,7 @@ def feature_extraction(img_dict : dict) -> list:
     for animal, img_list in img_dict.items():
         result = dict({})
         for img in img_list:
+            result['data'] = img
             result['hog'] = compute_hog(img)
             result['lbp'] = compute_lbp(img)
             result['sift'] = compute_sift(img)
